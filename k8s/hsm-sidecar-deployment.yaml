@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hsm-service
+  labels:
+    app: hsm-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hsm-service
+  template:
+    metadata:
+      labels:
+        app: hsm-service
+    spec:
+      volumes:
+      - name: hsm-tokens
+        hostPath:
+          path: /data/softhsm-tokens
+          type: DirectoryOrCreate
+      - name: softhsm-config
+        configMap:
+          name: softhsm-config
+      - name: hsm-service-config
+        configMap:
+          name: hsm-service-config
+
+      containers:
+      # Contenedor 1: microservicio Go
+      - name: hsm-service
+        image: hsm-service:latest
+        imagePullPolicy: Never
+        env:
+        - name: DATABASE_ENABLED # ← Deshabilitar DB
+          value: "false"
+        - name: ENVIRONMENT # dont use database 
+          value: "development"
+        - name: DATABASE_HOST
+          value: "localhost"
+        - name: HSM_LIBRARY_PATH
+          value: "/usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so"
+        - name: HSM_TOKEN_LABEL
+          value: "digsigna-token"
+        - name: HSM_PIN
+          valueFrom:
+            secretKeyRef:
+              name: hsm-secrets
+              key: pin
+        volumeMounts:
+        - name: hsm-tokens
+          mountPath: /var/lib/softhsm/tokens
+        - name: softhsm-config
+          mountPath: /etc/softhsm2.conf
+          subPath: softhsm2.conf
+        - name: hsm-service-config
+          mountPath: /root/config/config.yaml
+          subPath: config.yaml
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "384Mi"
+            cpu: "300m"
+
+      # Contenedor 2: SoftHSM sidecar
+      - name: softhsm-sidecar
+        image: softhsm:latest
+        imagePullPolicy: Never
+        volumeMounts:
+        - name: hsm-tokens
+          mountPath: /var/lib/softhsm/tokens
+        - name: softhsm-config
+          mountPath: /etc/softhsm2.conf
+          subPath: softhsm2.conf
+        # Sin puertos - comunicación via filesystem
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"

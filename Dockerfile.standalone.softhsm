@@ -1,0 +1,36 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV SOFTHSM2_CONF=/opt/softhsm/config/softhsm2.conf
+
+RUN apt-get update && apt-get install -y \
+    opensc \
+    softhsm2 \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /var/lib/softhsm/tokens \
+    && chown -R 1000:1000 /var/lib/softhsm \
+    && chmod 755 /var/lib/softhsm
+
+# Crear directorio de configuración alternativo
+RUN mkdir -p /opt/softhsm/config \
+    && chown -R 1000:1000 /opt/softhsm
+
+# Configuración optimizada para containers
+# COPY softhsm2.conf /etc/softhsm2.conf
+COPY init-hsm.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/init-hsm.sh
+
+# Exponer puerto para futuro uso (Phase 2)
+# EXPOSE 9999
+
+# Health check endpoint
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+#   CMD softhsm2-util --show-slots | grep -q "Present.*YES"
+
+USER 1000
+
+# Usar variable de entorno para config file
+# ENV SOFTHSM2_CONF=/home/softhsm/softhsm2.conf
+
+VOLUME ["/var/lib/softhsm/tokens"]
+CMD ["/usr/local/bin/init-hsm.sh"]

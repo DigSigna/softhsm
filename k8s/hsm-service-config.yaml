@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hsm-service-config
+data:
+  config.yaml: |
+    server:
+      port: 8080
+    hsm:
+      library_path: "/usr/lib/softhsm/libsofthsm2.so"
+      token_label: "digsigna-token"
+      pin: "1234"
+      max_sessions: 5
+      session_timeout: "30s"
+    database:
+      enabled: false  # ← Deshabilitar DB temporalmente
+    logging:
+      level: "debug"

@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: softhsm-standalone
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: softhsm
+  template:
+    metadata:
+      labels:
+        app: softhsm
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      volumes:
+      - name: hsm-tokens
+        emptyDir: {}
+      containers:
+      - name: softhsm
+        image: softhsm:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: SOFTHSM2_CONF
+          value: "/opt/softhsm/config/softhsm2.conf"
+        - name: HSM_USER_PIN
+          value: "1234"
+        - name: HSM_SO_PIN
+          value: "5678"
+        volumeMounts:
+        - name: hsm-tokens
+          mountPath: /var/lib/softhsm/tokens
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"

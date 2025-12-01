@@ -1,0 +1,85 @@
+# k8s/hsm-sidecar-temp.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hsm-service
+  labels:
+    app: hsm-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hsm-service
+  template:
+    metadata:
+      labels:
+        app: hsm-service
+    spec:
+      volumes:
+      - name: hsm-tokens
+        hostPath:
+          path: /data/softhsm-tokens
+          type: DirectoryOrCreate
+      - name: softhsm-config
+        configMap:
+          name: softhsm-config
+
+      initContainers:
+      - name: init-hsm
+        image: busybox
+        command: [ 'sh', '-c', 'mkdir -p /var/lib/softhsm/tokens && chmod 777 /var/lib/softhsm/tokens' ]
+        volumeMounts:
+        - name: hsm-tokens
+          mountPath: /var/lib/softhsm/tokens
+
+      containers:
+      # Contenedor 1: hsm-service TEMPORAL
+      - name: hsm-service
+        image: hsm-service:temp
+        imagePullPolicy: Never
+        volumeMounts:
+        - name: hsm-tokens
+          mountPath: /var/lib/softhsm/tokens
+        - name: softhsm-config
+          mountPath: /etc/softhsm2.conf
+          subPath: softhsm2.conf
+        ports:
+        - containerPort: 8080
+        livenessProbe:
+          exec:
+            command: [ "curl", "-f", "http://localhost:8080" ]
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        readinessProbe:
+          exec:
+            command: [ "curl", "-f", "http://localhost:8080" ]
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "384Mi"
+            cpu: "300m"
+
+      # Contenedor 2: SoftHSM sidecar
+      - name: softhsm-sidecar
+        image: softhsm:latest
+        imagePullPolicy: Never
+        env:
+        - name: SOFTHSM2_CONF
+          value: "/home/appuser/.config/softhsm2/softhsm2.conf"
+        volumeMounts:
+        - name: hsm-tokens
+          mountPath: /var/lib/softhsm/tokens
+        # - name: softhsm-config
+        #   mountPath: /etc/softhsm2.conf
+        #   subPath: softhsm2.conf
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
