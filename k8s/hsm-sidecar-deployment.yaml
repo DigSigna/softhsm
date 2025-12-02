@@ -2,8 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hsm-service
-  labels:
-    app: hsm-service
 spec:
   replicas: 1
   selector:
@@ -14,30 +12,69 @@ spec:
       labels:
         app: hsm-service
     spec:
+      imagePullSecrets:
+      - name: ghcr-creds
+      securityContext:
+        fsGroup: 1000
+
       volumes:
       - name: hsm-tokens
-        hostPath:
-          path: /data/softhsm-tokens
-          type: DirectoryOrCreate
+        persistentVolumeClaim:
+          claimName: softhsm-pvc
+
       - name: softhsm-config
         configMap:
           name: softhsm-config
+
       - name: hsm-service-config
         configMap:
           name: hsm-service-config
+      # -------------------------------------------------
+      # INIT CONTAINER: inicializa token si no existe
+      # -------------------------------------------------
+      initContainers:
+      - name: softhsm-init
+        image: ghcr.io/digsigna/softhsm/softhsm:latest
+        command: [ "/bin/sh", "-c", "/usr/local/bin/init-token-if-empty.sh" ]
+        env:
+        - name: TOKEN_LABEL
+          value: "digsigna-token"
+        - name: USER_PIN
+          valueFrom:
+            secretKeyRef:
+              name: hsm-secrets
+              key: pin
+        - name: SO_PIN
+          valueFrom:
+            secretKeyRef:
+              name: hsm-secrets
+              key: so-pin
+        volumeMounts:
+        - name: hsm-tokens
+          mountPath: /var/lib/softhsm/tokens
+        - name: softhsm-config
+          mountPath: /etc/softhsm2.conf
+          subPath: softhsm2.conf
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
 
       containers:
-      # Contenedor 1: microservicio Go
+      # -------------------------------------------------
+      # MAIN APP (Go)
+      # -------------------------------------------------
       - name: hsm-service
-        image: hsm-service:latest
-        imagePullPolicy: Never
+        image: ghcr.io/digsigna/hsm-service/hsm-service:latest
+        imagePullPolicy: Always
         env:
-        - name: DATABASE_ENABLED # ← Deshabilitar DB
+        - name: DATABASE_ENABLED
           value: "false"
-        - name: ENVIRONMENT # dont use database 
+        - name: ENVIRONMENT
           value: "development"
-        - name: DATABASE_HOST
-          value: "localhost"
         - name: HSM_LIBRARY_PATH
           value: "/usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so"
         - name: HSM_TOKEN_LABEL
@@ -58,25 +95,19 @@ spec:
           subPath: config.yaml
         ports:
         - containerPort: 8080
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "200m"
-          limits:
-            memory: "384Mi"
-            cpu: "300m"
 
-      # Contenedor 2: SoftHSM sidecar
+      # -------------------------------------------------
+      # SIDECAR (espera y nada más)
+      # -------------------------------------------------
       - name: softhsm-sidecar
-        image: softhsm:latest
-        imagePullPolicy: Never
+        image: ghcr.io/digsigna/softhsm/softhsm:latest
+        imagePullPolicy: Always
         volumeMounts:
         - name: hsm-tokens
           mountPath: /var/lib/softhsm/tokens
         - name: softhsm-config
           mountPath: /etc/softhsm2.conf
           subPath: softhsm2.conf
-        # Sin puertos - comunicación via filesystem
         resources:
           requests:
             memory: "128Mi"
