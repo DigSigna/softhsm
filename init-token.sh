@@ -1,51 +1,25 @@
 #!/bin/bash
 set -e
-
 TOKEN_DIR="/var/lib/softhsm/tokens"
-TOKEN_LABEL="digsigna-token"
-USER_PIN="1234"
-SO_PIN="5678"
+TOKEN_LABEL="${TOKEN_LABEL:-digsigna-token}"
+USER_PIN="${USER_PIN:-1234}"
+SO_PIN="${SO_PIN:-5678}"
 
-healthcheck() {
-    # Verificar que el token existe y es accesible
-    if pkcs11-tool --module /usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so --list-token-slots | grep -q "$TOKEN_LABEL"; then
-        echo "Token $TOKEN_LABEL está operativo"
-        exit 0
-    else
-        echo "Token $TOKEN_LABEL no encontrado"
-        exit 1
-    fi
-}
+# Forzar que SoftHSM use el config montado
+export SOFTHSM2_CONF=${SOFTHSM2_CONF:-/etc/softhsm2.conf}
 
-initialize_token() {
-    # Verificar si el token ya existe
-    if pkcs11-tool --module /usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so --list-token-slots | grep -q "$TOKEN_LABEL"; then
-        echo "Token $TOKEN_LABEL ya existe, omitiendo inicialización"
-        return 0
-    fi
+# Crear token dir si no existe y asegurar permisos
+mkdir -p "$TOKEN_DIR"
+chmod 700 "$TOKEN_DIR"
 
-    echo "Inicializando token $TOKEN_LABEL..."
-    
-    # Crear directorio de tokens
-    mkdir -p $TOKEN_DIR
-    
-    # Inicializar token
-    softhsm2-util --init-token --free --label "$TOKEN_LABEL" --so-pin "$SO_PIN" --pin "$USER_PIN"
-    
-    echo "Token $TOKEN_LABEL inicializado exitosamente"
-}
+# Si existe cualquier carpeta dentro de TOKEN_DIR, asumimos tokens ya presentes -> no inicializar
+if [ "$(ls -A "$TOKEN_DIR" 2>/dev/null | wc -l)" -gt 0 ]; then
+  echo "Tokens existentes detectados en $TOKEN_DIR, omitiendo inicialización."
+else
+  echo "No se encontraron tokens en $TOKEN_DIR. Inicializando nuevo token..."
+  softhsm2-util --init-token --free --label "$TOKEN_LABEL" --pin "$USER_PIN" --so-pin "$SO_PIN"
+  echo "Token inicializado."
+fi
 
-case "${1}" in
-    "healthcheck")
-        healthcheck
-        ;;
-    "init")
-        initialize_token
-        exec tail -f /dev/null
-        ;;
-    *)
-        initialize_token
-        echo "Sidecar SoftHSM listo - manteniendo contenedor activo"
-        exec tail -f /dev/null
-        ;;
-esac
+# Mantener contenedor
+exec tail -f /dev/null

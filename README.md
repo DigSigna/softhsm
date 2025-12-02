@@ -78,8 +78,8 @@ docker build -t hsm-service:latest -f .\Dockerfile .
 kubectl apply -f softhsm-configmap.yaml
 kubectl apply -f hsm-secrets.yaml
 kubectl apply -f hsm-service-config.yaml
+kubectl apply -f softhsm-pvc.yaml
 kubectl apply -f hsm-sidecar-deployment.yaml
-
 # 4. Verificar
 kubectl get pods -l app=hsm-service -w
 
@@ -136,4 +136,35 @@ docker images
 docker rmi [id]
 
 
-kubectl exec deployment/hsm-service -c hsm-service -- curl -X POST http://localhost:8080/api/v1/keys -H "Content-Type: application/json" -H "Authorization: Bearer dev-tenant-token123" -d '{ "algorithm": "RSA", "size": 2048, "label": "test-key-mvp"}'
+#hs-service operation (generate token key)
+kubectl exec deployment/hsm-service -c hsm-service -- \
+  curl -X POST http://localhost:8080/api/v1/keys \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer dev-tenant-token123" \
+  -d '{
+    "name": "test-key-mvp",
+    "key_size": 2048,
+    "algorithm": "RSA",
+    "usage": "SIGNING",
+    "tenant_id": "123e4567-e89b-12d3-a456-426614174000"
+  }'
+
+  kubectl exec deployment/hsm-service -c hsm-service -- curl -X POST http://localhost:8080/api/v1/keys -H "Content-Type: application/json" -H "Authorization: Bearer dev-tenant-token123" -d '{"name": "test-key-mvp", "key_size": 2048, "algorithm": "RSA", "usage": "SIGNING", "tenant_id": "123e4567-e89b-12d3-a456-426614174000"}'
+
+# Ver logs detallados del error
+kubectl logs deployment/hsm-service -c hsm-service --tail=100 | grep -A 10 -B 10 "CreateKey"
+
+# O en tiempo real
+kubectl logs deployment/hsm-service -c hsm-service -f
+
+# Listado de tokens y slots en sidecard
+kubectl exec -it deployment/hsm-service -c softhsm-sidecar --   ls -la /var/lib/softhsm/tokens
+kubectl exec -it deployment/hsm-service -c softhsm-sidecar -- softhsm2-util --show-slots
+
+#accesoa  bash
+kubectl exec -it deployment/hsm-service -c softhsm-sidecar -- bash
+
+⭐ 1 SoftHSM sidecar por aplicación (uno solo)
+⭐ Un token por tenant
+⭐ Dentro de cada token, una clave privada por usuario, si ellos firman.
+
