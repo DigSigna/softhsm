@@ -24,3 +24,13 @@ bash:
 show-slots:
 	@echo 'Showing slots...'
 	kubectl exec -it deployment/hsm-service -c softhsm-sidecar -- softhsm2-util --show-slots
+
+show-token-info: //todo fix param slot
+	@POD=$$(kubectl get pods -o jsonpath='{.items[0].metadata.name}'); \
+	echo "Showing token info in pod $$POD, slot $(slot)"; \
+	kubectl exec -it $$POD -- softhsm2-util --show-objects --slot $(slot)
+
+#portfoerwarding service
+portforward:
+	@echo 'portfoerwarding service 8080... '
+	kubectl port-forward deployment/hsm-service 8080:8080
