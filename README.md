@@ -79,7 +79,17 @@ kubectl apply -f softhsm-configmap.yaml
 kubectl apply -f hsm-secrets.yaml
 kubectl apply -f hsm-service-config.yaml
 kubectl apply -f softhsm-pvc.yaml
+kubectl apply -f mysql-secrets.yaml
+kubectl apply -f migrations-job.yaml
 kubectl apply -f hsm-sidecar-deployment.yaml
+
+# 3.1 removing
+kubectl delete -f xxxxxxxx.yaml
+# 3.2 removing job
+kubectl delete job migrations-job
+kubectl logs job/migrations-job
+
+
 # 4. Verificar
 kubectl get pods -l app=hsm-service -w
 
@@ -97,11 +107,11 @@ kubectl rollout restart deployment/hsm-service
 kubectl exec deployment/hsm-service -c hsm-service -- curl -s http://localhost:8080/health
 
 # Probar conexión PKCS#11 desde hsm-sidecar al SoftHSM
-kubectl exec deployment/hsm-service -c softhsm-sidecar -- pkcs11-tool --module /usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so --login --pin 1234 --list-objects
+kubectl exec deployment/hsm-service -c softhsm-sidecar -- pkcs11-tool --module /usr/lib/softhsm/libsofthsm2.so --login --pin 1234 --list-objects
 
 #verificar librería
 kubectl exec deployment/hsm-service -c hsm-service -- 
-ls -la /usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so 
+ls -la /usr/lib/softhsm/libsofthsm2.so 
 
 #verificar puedan acceder al mismo token
 # Desde hsm-service
@@ -164,7 +174,12 @@ kubectl exec -it deployment/hsm-service -c softhsm-sidecar -- softhsm2-util --sh
 #accesoa  bash
 kubectl exec -it deployment/hsm-service -c softhsm-sidecar -- bash
 
+
+#show slot content
+pkcs11-tool --modul /usr/local/lib/softhsm/libsofthsm2.so -l -O --slot XXXXX
 ⭐ 1 SoftHSM sidecar por aplicación (uno solo)
 ⭐ Un token por tenant
 ⭐ Dentro de cada token, una clave privada por usuario, si ellos firman.
 
+# Verificar estado del pod
+kubectl get pods -l app=hsm-service -w

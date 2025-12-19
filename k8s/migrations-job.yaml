@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrations-job
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      imagePullSecrets:
+      - name: ghcr-creds
+      restartPolicy: Never
+      containers:
+      - name: migrate
+        image: ghcr.io/digsigna/migrations:latest
+        imagePullPolicy: Always
+        env:
+        - name: MYSQL_DSN
+          value: "mysql://digsigna:AVNS_AoW9SVzq5lhLK5YhFzm@tcp(bitacoradigital-database-dec-26-backup-do-user-7050795-0.b.db.ondigitalocean.com:25060)/digsigna?tls=skip-verify"
+        command: [ "sh", "-c" ]
+        args:
+        - |
+          echo "Running database migrations..."
+          migrate -path=/migrations -database "$MYSQL_DSN" up

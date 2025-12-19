@@ -30,7 +30,7 @@ spec:
         configMap:
           name: hsm-service-config
       # -------------------------------------------------
-      # INIT CONTAINER: inicializa token si no existe
+      # INIT CONTAINER: Descargar certificados CA
       # -------------------------------------------------
       initContainers:
       - name: softhsm-init
@@ -68,22 +68,32 @@ spec:
       # MAIN APP (Go)
       # -------------------------------------------------
       - name: hsm-service
-        image: ghcr.io/digsigna/hsm-service/hsm-service:latest
+        image: ghcr.io/digsigna/hsm-service:latest
         imagePullPolicy: Always
         env:
         - name: DATABASE_ENABLED
-          value: "false"
-        - name: ENVIRONMENT
-          value: "development"
+          value: "true"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secrets
+              key: connection_string
+
+        - name: HSM_ENVIRONMENT
+          value: "production"
+
         - name: HSM_LIBRARY_PATH
-          value: "/usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so"
+          value: "/usr/lib/softhsm/libsofthsm2.so"
+
         - name: HSM_TOKEN_LABEL
           value: "digsigna-token"
+
         - name: HSM_PIN
           valueFrom:
             secretKeyRef:
               name: hsm-secrets
               key: pin
+
         volumeMounts:
         - name: hsm-tokens
           mountPath: /var/lib/softhsm/tokens
@@ -93,8 +103,19 @@ spec:
         - name: hsm-service-config
           mountPath: /root/config/config.yaml
           subPath: config.yaml
+
         ports:
         - containerPort: 8080
+          name: http
+          protocol: TCP
+
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
 
       # -------------------------------------------------
       # SIDECAR (espera y nada más)

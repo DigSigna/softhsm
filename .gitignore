@@ -1,2 +1,6 @@
 #env
 .env
+
+# secrets
+k8s/mysql-secrets.yaml
+k8s/hsm-secrets.yaml
