@@ -12,6 +12,7 @@ spec:
       labels:
         app: hsm-service
     spec:
+      serviceAccountName: hsm-service
       imagePullSecrets:
       - name: ghcr-creds
       securityContext:
@@ -29,6 +30,10 @@ spec:
       - name: hsm-service-config
         configMap:
           name: hsm-service-config
+
+      - name: auth-public-key
+        configMap:
+          name: auth-public-key
       # -------------------------------------------------
       # INIT CONTAINER: Descargar certificados CA
       # -------------------------------------------------
@@ -68,7 +73,7 @@ spec:
       # MAIN APP (Go)
       # -------------------------------------------------
       - name: hsm-service
-        image: ghcr.io/digsigna/hsm-service:latest
+        image: ghcr.io/digsigna/hsm-service:1.0.9
         imagePullPolicy: Always
         env:
         - name: DATABASE_ENABLED
@@ -94,6 +99,48 @@ spec:
               name: hsm-secrets
               key: pin
 
+        - name: HSM_AUTH_MODE
+          value: "development"
+        - name: HSM_AUTH_PUBLIC_KEY_PATH
+          value: "/etc/hsm/certs/public.pem"
+        - name: HSM_AUTH_JWKS_URL
+          value: "http://localhost:8080/.well-known/jwks.json"
+        - name: HSM_AUTH_JWKS_CACHE_MINUTES
+          value: "60"
+
+        - name: HSM_AESKEYMANAGER_STRATEGY
+          value: "k8s"
+        - name: HSM_AESKEYMANAGER_K8S_SECRET_NAME
+          value: "hsm-secrets"
+        - name: HSM_AESKEYMANAGER_K8S_SECRET_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: HSM_AESKEYMANAGER_K8S_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: hsm-secrets
+              key: master-key-id
+        - name: HSM_AESKEYMANAGER_K8S_MASTER_KEY_KEY
+          value: "master-aes-key-v1"
+        - name: HSM_AESKEYMANAGER_K8S_OLD_MASTER_KEY_KEY
+          value: "master-key-old"
+        - name: HSM_AESKEYMANAGER_K8S_IN_CLUSTER
+          value: "true"
+        - name: HSM_AESKEYMANAGER_K8S_KUBECONFIG_PATH
+          value: ""
+
+        - name: HSM_AUDIT_ENABLED
+          value: "true"
+        - name: HSM_AUDIT_STRATEGY
+          value: "hybrid"
+        - name: HSM_AUDIT_HTTP_TIMEOUT
+          value: "5s"
+        - name: HSM_AUDIT_HYBRID_CIRCUIT_BREAKER_MAX_FAILURES
+          value: "5"
+        - name: HSM_AUDIT_HYBRID_CIRCUIT_BREAKER_RESET_TIMEOUT
+          value: "30s"
+
         volumeMounts:
         - name: hsm-tokens
           mountPath: /var/lib/softhsm/tokens
@@ -103,6 +150,9 @@ spec:
         - name: hsm-service-config
           mountPath: /root/config/config.yaml
           subPath: config.yaml
+        - name: auth-public-key
+          mountPath: /etc/hsm/certs/public.pem
+          subPath: public.pem
 
         ports:
         - containerPort: 8080
@@ -113,9 +163,11 @@ spec:
           requests:
             memory: "256Mi"
             cpu: "200m"
+            ephemeral-storage: "256Mi"
           limits:
             memory: "512Mi"
             cpu: "500m"
+            ephemeral-storage: "512Mi"
 
       # -------------------------------------------------
       # SIDECAR (espera y nada más)
@@ -133,6 +185,8 @@ spec:
           requests:
             memory: "128Mi"
             cpu: "100m"
+            ephemeral-storage: "128Mi"
           limits:
             memory: "256Mi"
             cpu: "200m"
+            ephemeral-storage: "256Mi"

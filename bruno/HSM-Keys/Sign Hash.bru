@@ -1,0 +1,63 @@
+meta {
+  name: Sign Hash
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{minikube-uri}}/api/v1/keys/sign
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "key_id" : "6f80b059-dae4-4f98-8104-455b9f48cb64",
+    "Hash" : "aWRlbnRpdHlDb250ZXh0ICp2YWx1ZW9iamVjdHMuSWRlbnRpdHlDb250ZXh0"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+example {
+  name: Sign Hash RS
+  
+  request: {
+    url: {{minikube-uri}}/api/v1/keys/sign
+    method: POST
+    mode: json
+    body:json: {
+      {
+        "key_id" : "6f80b059-dae4-4f98-8104-455b9f48cb64",
+        "Hash" : "aWRlbnRpdHlDb250ZXh0ICp2YWx1ZW9iamVjdHMuSWRlbnRpdHlDb250ZXh0"
+      }
+    }
+  }
+  
+  response: {
+    headers: {
+      content-type: application/json; charset=utf-8
+      x-request-id: 58605b7a-f1c4-4deb-97da-6400c720bf86
+      date: Fri, 13 Feb 2026 22:46:01 GMT
+      content-length: 408
+    }
+  
+    status: {
+      code: 200
+      text: OK
+    }
+  
+    body: {
+      type: json
+      content: '''
+        {
+          "key_id": "6f80b059-dae4-4f98-8104-455b9f48cb64",
+          "signature": "OksxrceWQb9njATdaE1CHjNBJfvePzFfJZBgYr7pTA+mUOhUHV74dy+pHkiV9uJDWHAbcvbWCsFRZr/XDoQNv/BtmV59fg6nlkB6l7gt3y4tl7LDNI4pLUE3R8SsLHxgi2k/cZrnaKIy+yMdBGHIa9Saq+lZDhUp3Mey5GHe7494ECat1qCCEKJpFT4Q6ofHon1HwEiDfgZJkvAH9q8YbxjkTmK5Tk6H0V6FEsZW3mtrQdOkHcyw81Iaays2NfXeXYQB+0wRvFqmDzy+M69YKIN58A4zSvqcEoXPg1HUEFi8m1l9OFsp15luPUVDHQHTuKXzBaJbIolOjG2eQZKC/g=="
+        }
+      '''
+    }
+  }
+}

@@ -1,0 +1,73 @@
+meta {
+  name: Create Key
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{minikube-uri}}/api/v1/keys
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "white-label-reseller-tenant-key-k8s-001",
+    "key_size": 2048,
+    "algorithm": "RSA",
+    "usage": "SIGNING"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+example {
+  name: Create Key RS - K8S
+  
+  request: {
+    url: {{minikube-uri}}/api/v1/keys
+    method: POST
+    mode: json
+    body:json: {
+      {
+        "name": "white-label-reseller-tenant-key-k8s-001",
+        "key_size": 2048,
+        "algorithm": "RSA",
+        "usage": "SIGNING"
+      }
+    }
+  }
+  
+  response: {
+    headers: {
+      content-type: application/json; charset=utf-8
+      x-request-id: 079c86d8-f984-4cef-b3d9-9fe9ffb01fa0
+      date: Fri, 13 Feb 2026 22:44:06 GMT
+      content-length: 250
+    }
+  
+    status: {
+      code: 201
+      text: Created
+    }
+  
+    body: {
+      type: json
+      content: '''
+        {
+          "algorithm": "RSA",
+          "created_at": "0001-01-01T00:00:00Z",
+          "id": "6f80b059-dae4-4f98-8104-455b9f48cb64",
+          "is_active": true,
+          "key_size": 2048,
+          "name": "white-label-reseller-tenant-key-k8s-001",
+          "tenant_id": "30000000-3000-3000-3000-000000000001",
+          "usage": "SIGNING"
+        }
+      '''
+    }
+  }
+}

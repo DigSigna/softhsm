@@ -75,6 +75,7 @@ kubectl exec deployment/softhsm-standalone -- pkcs11-tool --module /usr/lib/soft
 docker build -t hsm-service:latest -f .\Dockerfile .
 
 # 3. Aplicar configuración
+kubectl apply -f .\k8s\auth-public-key-configmap.yaml
 kubectl apply -f softhsm-configmap.yaml
 kubectl apply -f hsm-secrets.yaml
 kubectl apply -f hsm-service-config.yaml
@@ -132,6 +133,7 @@ kubectl exec deployment/hsm-service -c hsm-service -- \
 
 #logs
 kubectl logs deployment/hsm-service -c hsm-service 
+kubectl describe pod -l app=hsm-service
 ```
 
 ## Administración de imagenes

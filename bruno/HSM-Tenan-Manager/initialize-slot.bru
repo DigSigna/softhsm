@@ -1,0 +1,62 @@
+meta {
+  name: initialize-slot
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{minikube-uri}}/internal/hsm/slots/initialize
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "pin" : "1234"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+example {
+  name: init slot reseller
+  
+  request: {
+    url: {{minikube-uri}}/internal/hsm/slots/initialize
+    method: POST
+    mode: json
+    body:json: {
+      {
+        "pin" : "1234"
+      }
+    }
+  }
+  
+  response: {
+    headers: {
+      content-type: application/json; charset=utf-8
+      x-request-id: 13889452-3980-4741-a12b-cc763b357c14
+      date: Fri, 13 Feb 2026 22:15:03 GMT
+      content-length: 140
+    }
+  
+    status: {
+      code: 201
+      text: Created
+    }
+  
+    body: {
+      type: json
+      content: '''
+        {
+          "message": "Slot initialized successfully",
+          "slot": "e0bc5470-d989-4df1-a983-cb1fe25516d3",
+          "tenant_id": "30000000-3000-3000-3000-000000000001"
+        }
+      '''
+    }
+  }
+}

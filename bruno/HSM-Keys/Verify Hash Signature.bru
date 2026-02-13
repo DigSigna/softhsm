@@ -1,0 +1,66 @@
+meta {
+  name: Verify Hash Signature
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{minikube-uri}}/api/v1/keys/verify
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "key_id" : "6f80b059-dae4-4f98-8104-455b9f48cb64",
+    "Hash" : "aWRlbnRpdHlDb250ZXh0ICp2YWx1ZW9iamVjdHMuSWRlbnRpdHlDb250ZXh0",
+    "signature": "OksxrceWQb9njATdaE1CHjNBJfvePzFfJZBgYr7pTA+mUOhUHV74dy+pHkiV9uJDWHAbcvbWCsFRZr/XDoQNv/BtmV59fg6nlkB6l7gt3y4tl7LDNI4pLUE3R8SsLHxgi2k/cZrnaKIy+yMdBGHIa9Saq+lZDhUp3Mey5GHe7494ECat1qCCEKJpFT4Q6ofHon1HwEiDfgZJkvAH9q8YbxjkTmK5Tk6H0V6FEsZW3mtrQdOkHcyw81Iaays2NfXeXYQB+0wRvFqmDzy+M69YKIN58A4zSvqcEoXPg1HUEFi8m1l9OFsp15luPUVDHQHTuKXzBaJbIolOjG2eQZKC/g=="
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+example {
+  name: Verify Sign RS K8S
+  
+  request: {
+    url: {{minikube-uri}}/api/v1/keys/verify
+    method: POST
+    mode: json
+    body:json: {
+      {
+        "key_id" : "6f80b059-dae4-4f98-8104-455b9f48cb64",
+        "Hash" : "aWRlbnRpdHlDb250ZXh0ICp2YWx1ZW9iamVjdHMuSWRlbnRpdHlDb250ZXh0",
+        "signature": "OksxrceWQb9njATdaE1CHjNBJfvePzFfJZBgYr7pTA+mUOhUHV74dy+pHkiV9uJDWHAbcvbWCsFRZr/XDoQNv/BtmV59fg6nlkB6l7gt3y4tl7LDNI4pLUE3R8SsLHxgi2k/cZrnaKIy+yMdBGHIa9Saq+lZDhUp3Mey5GHe7494ECat1qCCEKJpFT4Q6ofHon1HwEiDfgZJkvAH9q8YbxjkTmK5Tk6H0V6FEsZW3mtrQdOkHcyw81Iaays2NfXeXYQB+0wRvFqmDzy+M69YKIN58A4zSvqcEoXPg1HUEFi8m1l9OFsp15luPUVDHQHTuKXzBaJbIolOjG2eQZKC/g=="
+      }
+    }
+  }
+  
+  response: {
+    headers: {
+      content-type: application/json; charset=utf-8
+      x-request-id: 9f5b9776-3ff4-44b2-8fef-53e13cfaffde
+      date: Fri, 13 Feb 2026 22:46:54 GMT
+      content-length: 96
+    }
+  
+    status: {
+      code: 200
+      text: OK
+    }
+  
+    body: {
+      type: json
+      content: '''
+        {
+          "is_valid": true,
+          "key_id": "6f80b059-dae4-4f98-8104-455b9f48cb64",
+          "message": "Signature is valid"
+        }
+      '''
+    }
+  }
+}

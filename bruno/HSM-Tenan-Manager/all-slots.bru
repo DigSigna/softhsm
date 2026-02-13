@@ -1,0 +1,52 @@
+meta {
+  name: all-slots
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{minikube-uri}}/internal/hsm/slots/all
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+example {
+  name: all slots response
+  
+  request: {
+    url: {{minikube-uri}}/internal/hsm/slots/all
+    method: GET
+    mode: none
+  }
+  
+  response: {
+    headers: {
+      content-type: application/json; charset=utf-8
+      x-request-id: 2c0c9a5f-e441-4495-89d6-b507ed8597af
+      date: Fri, 13 Feb 2026 22:14:20 GMT
+      content-length: 28
+    }
+  
+    status: {
+      code: 200
+      text: OK
+    }
+  
+    body: {
+      type: json
+      content: '''
+        {
+          "all_slots": [
+            1070435205,
+            1
+          ]
+        }
+      '''
+    }
+  }
+}

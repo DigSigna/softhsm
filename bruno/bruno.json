@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Minikube(k8s)",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
