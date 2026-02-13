@@ -1,55 +1,69 @@
 # GHCR
 
 ## Login
+
 ```bash
-#ensure command print tocker correctly
-echo $GHCR_TOKEN | docker login ghcr.io -u USERNAME --pasword-stdin
+# Ensure the command prints the token correctly
+# Replace USERNAME with your GitHub username
+# GHCR_TOKEN can be a PAT with read:packages/write:packages
+
+echo $GHCR_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
 ```
 
-## build and push
+## Build and push
+
 ```bash
 docker build -t ghcr.io/<usuario>/<repo>/<nombre-de-imagen> .
 
 docker push ghcr.io/<usuario>/<repo>/<nombre-de-imagen>
 ```
 
-## Secret
-Crear kubectl secret para hacer pull de imagenes privadas
+## Create pull secret
+
+Crear kubectl secret para hacer pull de imágenes privadas:
+
 ```bash
 kubectl create secret docker-registry ghcr-creds \
-  --docker-server=ghcr.io \
-  --docker-username=tuUsuario \
-  --docker-password=$GITHUB_TOKEN
+	--docker-server=ghcr.io \
+	--docker-username=tuUsuario \
+	--docker-password=$GITHUB_TOKEN
 ```
 
 ```powershell
-kubectl create secret docker-registry ghcr-creds --docker-server=ghcr.io --docker-username=tuUsuario --docker-password=$GITHUB_TOKEN
+kubectl create secret docker-registry ghcr-creds \
+	--docker-server=ghcr.io \
+	--docker-username=tuUsuario \
+	--docker-password=$GITHUB_TOKEN
 ```
 
-## YAML Config
-Configuración para imagenes locales (Dentro de Minikube)
+## YAML examples
+
+### Imagen local (Minikube)
+
 ```yaml
-    containers:
-    -  name: hsm-service
-       image: hsm-service:latest
-       imagePullPolicy: Never
+containers:
+	- name: hsm-service
+		image: hsm-service:latest
+		imagePullPolicy: Never
 ```
 
-Configuración para imagenes remotas (GHCR)
+### Imagen remota (GHCR)
+
 ```yaml
-    containers:
-    - name: hsm-service
-      image: ghcr.io/tuusuario/hsm-service:latest
-      imagePullPolicy: Always
+containers:
+	- name: hsm-service
+		image: ghcr.io/tuusuario/hsm-service:latest
+		imagePullPolicy: Always
 ```
 
-## YALM Deploy con imagenes privadas
+## YAML deploy con imágenes privadas
+
 ```yaml
 template:
-    metadata:
-      labels:
-        app: hsm-service
-    spec:
-      imagePullSecrets:
-      - name: ghcr-creds
+	metadata:
+		labels:
+			app: hsm-service
+	spec:
+		imagePullSecrets:
+			- name: ghcr-creds
 ```

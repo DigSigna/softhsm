@@ -3,24 +3,39 @@ HSM_PIN  ?= 1234
 HSM_MODULE := /usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so
 HSM_DEPLOY := hsm-service
 HSM_CONTAINER := softhsm-sidecar
+K8S_DIR := k8s
 
 create:
 	@echo "Creating minikube cluster..."
 	minikube start --memory=4g --cpus=2 --disk-size=20g --driver=docker --addons=ingress,metrics-server
 # 	minikube start --memory=4g --cpus=2  --disk-size=20g --driver=docker --kubernetes-version=v1.28.0 --addons=ingress,metrics-server
 
-#build to GHCR
+# build to GHCR
 build-ghcr:
 	@echo "Building to GHCR..."
 	docker build -t ghcr.io/digsigna/softhsm/softhsm:latest -f Dockerfile .
 	@echo "Built to GHCR..."
-#push to GHCR
+# push to GHCR
 push-ghcr:
 	@echo 'Pushing to GHCR...'
 	docker push ghcr.io/digsigna/softhsm/softhsm:latest
 	@echo 'Pushed to GHCR...'
 
-#roll out deployment
+# apply manifests (sidecar)
+apply:
+	@echo 'Applying k8s manifests...'
+	kubectl apply -f ./$(K8S_DIR)/auth-public-key-configmap.yaml
+	kubectl apply -f ./$(K8S_DIR)/softhsm-configmap.yaml
+	kubectl apply -f ./$(K8S_DIR)/hsm-secrets.yaml
+	kubectl apply -f ./$(K8S_DIR)/hsm-service-config.yaml
+	kubectl apply -f ./$(K8S_DIR)/softhsm-pvc.yaml
+	kubectl apply -f ./$(K8S_DIR)/mysql-secrets.yaml
+	kubectl apply -f ./$(K8S_DIR)/migrations-job.yaml
+	kubectl apply -f ./$(K8S_DIR)/hsm-service-rbac.yaml
+	kubectl apply -f ./$(K8S_DIR)/hsm-sidecar-deployment.yaml
+	@echo 'Manifests applied.'
+
+# roll out deployment
 rollout:
 	@echo 'Rolling out deployment...'
 	kubectl rollout restart deployment/hsm-service
@@ -41,10 +56,19 @@ show-token-info:
 	echo "Showing token info in pod $$POD, slot $(slot)" && \
 	kubectl exec -it $$POD -- softhsm2-util --show-objects --slot $(slot)
 
-#portfoerwarding service
+# port-forward service
 portforward:
-	@echo 'portfoerwarding service 8080... '
+	@echo 'port-forwarding service 8080... '
 	kubectl port-forward deployment/hsm-service 8080:8080
+
+# logs
+logs:
+	@echo 'Tailing hsm-service logs...'
+	kubectl logs deployment/$(HSM_DEPLOY) -c hsm-service --tail=100
+
+logs-sidecar:
+	@echo 'Tailing softhsm-sidecar logs...'
+	kubectl logs deployment/$(HSM_DEPLOY) -c $(HSM_CONTAINER) --tail=100
 
 #list tokens in slot
 hsm-list:
@@ -53,7 +77,7 @@ hsm-list:
 		--login --pin $(HSM_PIN) \
 		--list-objects --slot $(HSM_SLOT)
 
-#waching deploy pods
+# watching deploy pods
 watch-pods:
 	@echo 'Watching deployment pods...'
 	kubectl get pods -l app=hsm-service -w
