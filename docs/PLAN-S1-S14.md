@@ -55,7 +55,7 @@ Leer `AGENTS.md` en la raíz de este repo primero.
 
 | # | Hallazgo | Archivo(s) | Nota |
 |---|---|---|---|
-| S5 | Sin `livenessProbe`/`readinessProbe` pese a exponer `/health`, `/ready`, `/hsm-health` | `k8s/hsm-sidecar-deployment.yaml` | Conecta con el bug de deadlock por RWMutex mal usado en `hsm-service` - sin probe, k8s nunca reinicia un pod trabado |
+| S5 | Sin `livenessProbe`/`readinessProbe` pese a exponer `/health`, `/ready`, `/hsm-health` | `k8s/hsm-sidecar-deployment.yaml` | **✅ RESUELTO:** Agregadas probes HTTP a `/health` (liveness) y `/ready` (readiness) con timings apropiados para detectar y reiniciar pods trabados por RWMutex deadlock. Commit: 2d87db4 |
 | S6 | RBAC demasiado amplio: `get/list/watch` sobre TODOS los secrets del namespace | `k8s/hsm-service-rbac.yaml` | Agregar `resourceNames: ["hsm-secrets", "mysql-secrets"]` |
 | S7 | Imagen del sidecar en `:latest`, hsm-service pineado a `:1.0.9` | `k8s/hsm-sidecar-deployment.yaml` | Pinear a versión/digest específico |
 | S8 | Sin `securityContext` a nivel contenedor | `k8s/hsm-sidecar-deployment.yaml` | `runAsNonRoot: true`, `allowPrivilegeEscalation: false`, capabilities drop |
