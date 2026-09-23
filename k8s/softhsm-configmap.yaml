@@ -7,6 +7,3 @@ data:
     directories.tokendir = /var/lib/softhsm/tokens
     objectstore.backend = file
     log.level = INFO
-    # Configuración optimizada para contenedores
-    slot.list.oneshot = false
-    library.allow_export = true
