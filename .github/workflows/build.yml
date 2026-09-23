@@ -18,8 +18,8 @@ jobs:
     - name: Determine image tags
       id: tags
       run: |
-        IMAGE_BASE="ghcr.io/${{ github.repository_owner }}/softhsm/softhsm"
-        TAGS="$IMAGE_BASE:latest"
+        OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+        IMAGE_BASE="ghcr.io/${OWNER}/softhsm/softhsm"
 
         # If this is a tag push, also tag with the version
         if [[ "${{ github.ref }}" == refs/tags/* ]]; then
