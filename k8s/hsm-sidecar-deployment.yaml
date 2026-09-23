@@ -39,7 +39,7 @@ spec:
       # -------------------------------------------------
       initContainers:
       - name: softhsm-init
-        image: ghcr.io/digsigna/softhsm/softhsm:latest
+        image: ghcr.io/digsigna/softhsm/softhsm:1.0.0
         command: [ "/bin/sh", "-c", "/usr/local/bin/init-token-if-empty.sh" ]
         env:
         - name: TOKEN_LABEL
@@ -193,7 +193,7 @@ spec:
       # SIDECAR (espera y nada más)
       # -------------------------------------------------
       - name: softhsm-sidecar
-        image: ghcr.io/digsigna/softhsm/softhsm:latest
+        image: ghcr.io/digsigna/softhsm/softhsm:1.0.0
         imagePullPolicy: Always
         volumeMounts:
         - name: hsm-tokens
