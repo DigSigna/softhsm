@@ -4,21 +4,23 @@ HSM_MODULE := /usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so
 HSM_DEPLOY := hsm-service
 HSM_CONTAINER := softhsm-sidecar
 K8S_DIR := k8s
+SOFTHSM_VERSION ?= latest
+SOFTHSM_IMAGE := ghcr.io/digsigna/softhsm/softhsm:$(SOFTHSM_VERSION)
 
 create:
 	@echo "Creating minikube cluster..."
 	minikube start --memory=4g --cpus=2 --disk-size=20g --driver=docker --addons=ingress,metrics-server
 # 	minikube start --memory=4g --cpus=2  --disk-size=20g --driver=docker --kubernetes-version=v1.28.0 --addons=ingress,metrics-server
 
-# build to GHCR
+# build to GHCR (usage: make build-ghcr SOFTHSM_VERSION=1.0.0)
 build-ghcr:
-	@echo "Building to GHCR..."
-	docker build -t ghcr.io/digsigna/softhsm/softhsm:latest -f Dockerfile .
+	@echo "Building to GHCR as $(SOFTHSM_IMAGE)..."
+	docker build -t $(SOFTHSM_IMAGE) -f Dockerfile .
 	@echo "Built to GHCR..."
-# push to GHCR
+# push to GHCR (usage: make push-ghcr SOFTHSM_VERSION=1.0.0)
 push-ghcr:
-	@echo 'Pushing to GHCR...'
-	docker push ghcr.io/digsigna/softhsm/softhsm:latest
+	@echo 'Pushing to GHCR: $(SOFTHSM_IMAGE)...'
+	docker push $(SOFTHSM_IMAGE)
 	@echo 'Pushed to GHCR...'
 
 # apply manifests (sidecar)
