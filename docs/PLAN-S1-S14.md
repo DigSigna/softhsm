@@ -56,7 +56,7 @@ Leer `AGENTS.md` en la raíz de este repo primero.
 | # | Hallazgo | Archivo(s) | Nota |
 |---|---|---|---|
 | S5 | Sin `livenessProbe`/`readinessProbe` pese a exponer `/health`, `/ready`, `/hsm-health` | `k8s/hsm-sidecar-deployment.yaml` | **✅ RESUELTO:** Agregadas probes HTTP a `/health` (liveness) y `/ready` (readiness) con timings apropiados para detectar y reiniciar pods trabados por RWMutex deadlock. Commit: 2d87db4 |
-| S6 | RBAC demasiado amplio: `get/list/watch` sobre TODOS los secrets del namespace | `k8s/hsm-service-rbac.yaml` | Agregar `resourceNames: ["hsm-secrets", "mysql-secrets"]` |
+| S6 | RBAC demasiado amplio: `get/list/watch` sobre TODOS los secrets del namespace | `k8s/hsm-service-rbac.yaml` | **✅ RESUELTO:** Agregado `resourceNames: ["hsm-secrets", "mysql-secrets"]` y removido `list` verb (innecesario, solo `get`/`watch` para acceso directo via secretKeyRef). Strict least-privilege per AGENTS.md regla 7. |
 | S7 | Imagen del sidecar en `:latest`, hsm-service pineado a `:1.0.9` | `k8s/hsm-sidecar-deployment.yaml` | Pinear a versión/digest específico |
 | S8 | Sin `securityContext` a nivel contenedor | `k8s/hsm-sidecar-deployment.yaml` | `runAsNonRoot: true`, `allowPrivilegeEscalation: false`, capabilities drop |
 | S9 | 3 scripts casi idénticos de init (`k8s/init-token-if-empty.sh`, `scripts/init-hsm.sh`, `scripts/init-token.sh`), uno con ~30 líneas comentadas | `scripts/`, `k8s/` | Consolidar a uno; `k8s/init-token-if-empty.sh` es el que realmente se usa (initContainer real) |
