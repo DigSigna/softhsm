@@ -1,0 +1,40 @@
+name: Build and Push SoftHSM Sidecar to GHCR
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ "v*" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Log in to GHCR
+      run: echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+    - name: Determine image tags
+      id: tags
+      run: |
+        IMAGE_BASE="ghcr.io/${{ github.repository_owner }}/softhsm/softhsm"
+        TAGS="$IMAGE_BASE:latest"
+
+        # If this is a tag push, also tag with the version
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/v}
+          TAGS="$TAGS,$IMAGE_BASE:$VERSION"
+        fi
+
+        echo "tags=$TAGS" >> $GITHUB_OUTPUT
+
+    - name: Build image
+      run: docker build -t ${{ steps.tags.outputs.tags }} -f Dockerfile .
+
+    - name: Push image
+      run: |
+        IFS=',' read -ra TAG_ARRAY <<< "${{ steps.tags.outputs.tags }}"
+        for tag in "${TAG_ARRAY[@]}"; do
+          docker push "$tag"
+        done
