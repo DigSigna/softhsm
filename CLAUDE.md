@@ -76,7 +76,8 @@ From `Makefile` (run in repo root):
 
 - `k8s/hsm-sidecar-deployment.yaml` — Pod spec, image, init container, volumes, RBAC ref
 - `k8s/init-token-if-empty.sh` — ONE-TIME token initialization (wrapped in initContainer)
-- `k8s/softhsm-configmap.yaml` — SoftHSM2 runtime config
+- `k8s/softhsm-configmap.yaml` — SoftHSM2 runtime config (source of truth for deployments)
+- `softhsm2.conf` — Deprecated reference file, use ConfigMap for cluster deployments
 - `k8s/hsm-secrets.yaml` — HSM PIN, SO-PIN, AES master key (git-ignored, example: `mysql-secrets.example.yaml`)
 - `k8s/hsm-service-rbac.yaml` — ServiceAccount, Role, RoleBinding (scoped to specific secrets)
 - `Dockerfile` — SoftHSM2 container image
