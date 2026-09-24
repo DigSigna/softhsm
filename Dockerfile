@@ -10,11 +10,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     softhsm2 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /var/lib/softhsm/tokens
+RUN mkdir -p /var/lib/softhsm/tokens && \
+    useradd -u 1000 -m -s /sbin/nologin softhsm && \
+    chown -R softhsm:softhsm /var/lib/softhsm
 
-
-# Entrada del contenedor
 COPY k8s/init-token-if-empty.sh /usr/local/bin/init-token-if-empty.sh
 RUN chmod +x /usr/local/bin/init-token-if-empty.sh
+
+USER softhsm
 
 ENTRYPOINT [ "sh", "-c", "echo starting softhsm sidecar; tail -f /dev/null" ]

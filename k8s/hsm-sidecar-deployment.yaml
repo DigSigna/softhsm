@@ -195,6 +195,12 @@ spec:
       - name: softhsm-sidecar
         image: ghcr.io/digsigna/softhsm/softhsm:1.0.0
         imagePullPolicy: Always
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
         volumeMounts:
         - name: hsm-tokens
           mountPath: /var/lib/softhsm/tokens
