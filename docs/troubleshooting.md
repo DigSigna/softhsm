@@ -4,7 +4,7 @@
 
 ```powershell
 minikube -p minikube docker-env --shell powershell | Invoke-Expression
-docker build -t softhsm:latest -f Dockerfile.softhsm .
+docker build -t softhsm:latest -f Dockerfile.standalone.softhsm .
 ```
 
 ## Limpieza completa
