@@ -10,11 +10,10 @@ Kubernetes (DOKS).
   stay `exec`-able, not to run initialization itself.
 - Initialization happens in a Kubernetes **initContainer** (see
   `k8s/hsm-sidecar-deployment.yaml`), which reuses the same image but overrides the command
-  to run `k8s/init-token-if-empty.sh` — that's the script that actually matters for how a
-  token gets created; the other two init scripts under `scripts/` are earlier/alternate
-  versions, not what's deployed.
+  to run `k8s/init-token-if-empty.sh` — that's the single initialization script used for
+  token creation in both cluster and development modes.
 - `Dockerfile.standalone.softhsm` is a separate, self-contained image (runs
-  `scripts/init-hsm.sh` as its own `CMD`) for local development without Kubernetes — not
+  `k8s/init-token-if-empty.sh` as its own `CMD`) for local development without Kubernetes — not
   what runs in the cluster.
 - `k8s/migrations-job.yaml` is what actually applies the `migrations` repo's SQL against
   the real database — not anything in that repo's own `Makefile`/`cmd/`. If you're changing

@@ -80,7 +80,7 @@ From `Makefile` (run in repo root):
 - `k8s/hsm-secrets.yaml` — HSM PIN, SO-PIN, AES master key (git-ignored, example: `mysql-secrets.example.yaml`)
 - `k8s/hsm-service-rbac.yaml` — ServiceAccount, Role, RoleBinding (scoped to specific secrets)
 - `Dockerfile` — SoftHSM2 container image
-- `scripts/{init-hsm,init-token}.sh` — **Obsolete duplicates** (consolidation pending, see PLAN)
+- `Dockerfile.standalone.softhsm` — Development-only image with init script (references `k8s/init-token-if-empty.sh`)
 
 ## Working plan
 

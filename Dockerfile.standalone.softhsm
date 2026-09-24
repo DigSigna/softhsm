@@ -17,8 +17,8 @@ RUN mkdir -p /opt/softhsm/config \
 
 # Configuración optimizada para containers
 # COPY softhsm2.conf /etc/softhsm2.conf
-COPY init-hsm.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/init-hsm.sh
+COPY k8s/init-token-if-empty.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/init-token-if-empty.sh
 
 # Exponer puerto para futuro uso (Phase 2)
 # EXPOSE 9999
@@ -33,4 +33,4 @@ USER 1000
 # ENV SOFTHSM2_CONF=/home/softhsm/softhsm2.conf
 
 VOLUME ["/var/lib/softhsm/tokens"]
-CMD ["/usr/local/bin/init-hsm.sh"]
+CMD ["/usr/local/bin/init-token-if-empty.sh"]
