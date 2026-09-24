@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /var/lib/softhsm/tokens && \
-    useradd -u 1000 -m -s /sbin/nologin softhsm && \
+    useradd -u 1000 -g softhsm -m -s /sbin/nologin softhsm 2>/dev/null || true && \
     chown -R softhsm:softhsm /var/lib/softhsm
 
 COPY k8s/init-token-if-empty.sh /usr/local/bin/init-token-if-empty.sh
