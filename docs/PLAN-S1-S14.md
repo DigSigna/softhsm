@@ -63,7 +63,7 @@ Leer `AGENTS.md` en la raíz de este repo primero.
 | S10 | `softhsm2.conf` (raíz) vs `k8s/softhsm-configmap.yaml` divergen | ambos | **✅ RESUELTO:** Sincronizado ConfigMap para incluir `slots.removable = false`. Removidas líneas inválidas (`library.managers.pkcs11.*`) de softhsm2.conf (raíz). Marcado archivo raíz como DEPRECATED (referencia solo). |
 | S11 | `docs/troubleshooting.md` referencia `Dockerfile.softhsm`, el archivo real es `Dockerfile.standalone.softhsm` | `docs/troubleshooting.md` | **✅ RESUELTO:** Corregido comando en línea 7 para referencia correcta a `Dockerfile.standalone.softhsm`. |
 | S12 | README/Makefile referencian `k8s/mysql-secrets.yaml` (correctamente gitignored) sin ningún `.example.yaml` de referencia | `k8s/` | **✅ RESUELTO:** `k8s/mysql-secrets.example.yaml` existe con placeholders claros. README.md líneas 32–34 referencia el archivo de ejemplo. |
-| S13 | `docs/pvc-cleanup.md` explica borrar el PVC sin advertencia de que eso destruye todo el material HSM irreversible, sin mencionar backup | `docs/pvc-cleanup.md` | Agregar advertencia explícita + paso de backup antes del borrado |
+| S13 | `docs/pvc-cleanup.md` explica borrar el PVC sin advertencia de que eso destruye todo el material HSM irreversible, sin mencionar backup | `docs/pvc-cleanup.md` | **✅ RESUELTO:** Agregada advertencia prominente ("⚠️ WARNING: IRREVERSIBLE") y paso 0 de backup con múltiples opciones (DigitalOcean snapshot, tar backup, PVC export). |
 | S12b | `docs/Troubleshot.md` es un stub de 2 líneas, duplicado confuso de `docs/troubleshooting.md` | `docs/Troubleshot.md` | **✅ RESUELTO:** Archivo eliminado. Solo `docs/troubleshooting.md` permanece. |
 
 ## Nota para evitar reinvestigación
