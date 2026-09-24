@@ -23,7 +23,7 @@ jobs:
         # Build with :latest tag
         docker build -t $IMAGE_BASE:latest -f Dockerfile .
         docker push $IMAGE_BASE:latest
-                                                                                                                                                                                                                                                No changes this session
+
         # If this is a version tag, also tag with version
         if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
           VERSION=${GITHUB_REF#refs/tags/v}
