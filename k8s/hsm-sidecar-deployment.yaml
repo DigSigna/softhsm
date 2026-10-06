@@ -87,6 +87,17 @@ spec:
         - name: HSM_ENVIRONMENT
           value: "production"
 
+        # Pin the config file to an absolute path matching the existing
+        # configmap mount below, independent of the app's CWD/WORKDIR.
+        # Without this, config loading falls back to a path relative to the
+        # working directory (config/config.<HSM_ENVIRONMENT>.yaml), which
+        # breaks if the image's WORKDIR ever changes (it does, in the
+        # non-root hardening — WORKDIR moved from /root to /app) and doesn't
+        # match this mount's literal filename (config.yaml, no env suffix)
+        # either way.
+        - name: HSM_CONFIG_PATH
+          value: "/root/config/config.yaml"
+
         - name: HSM_LIBRARY_PATH
           value: "/usr/lib/softhsm/libsofthsm2.so"
 
